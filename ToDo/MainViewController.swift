@@ -54,7 +54,11 @@ class MainViewController: UIViewController {
     @objc
     func add(){
         //open editViewController
-        present(UINavigationController(rootViewController: DetailsViewController()), animated: true, completion: nil )
+        let detailsViewController = DetailsViewController()
+        detailsViewController.itemToEdit = Todo()
+        detailsViewController.delegate = self
+        navigationController?.pushViewController(detailsViewController, animated: true)
+
     }
     
     @objc
@@ -82,7 +86,7 @@ class MainViewController: UIViewController {
         view.addSubview(addButton)
         view.addSubview(editButton)
         
-        self.navigationItem.title = "Todo List"
+        self.navigationItem.title = "Список задач"
         self.navigationController?.navigationBar.prefersLargeTitles = true
     }
     
@@ -112,26 +116,26 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: TodoCell.identifier, for: indexPath) as! TodoCell
-        cell.setTodo(defaults.todoList[indexPath.row])
+        cell.setTodo(defaults.data[indexPath.row])
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell: TodoCell = tableView.cellForRow(at: indexPath) as? TodoCell{
-            var item = defaults.todoList[indexPath.row]
+            var item = defaults.data[indexPath.row]
             item.isDone.toggle()
-            defaults.todoList.remove(at: indexPath.row)
-            defaults.todoList.insert(item, at: indexPath.row)
+            defaults.remove(index: indexPath.row)
+            defaults.insert(todo: item, index: indexPath.row)
             cell.cellSelected(isSelected: item.isDone)
-            defaults.updateData()
         }
     }
     
     
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print("defaults.todoList.count =  \(defaults.todoList.count)")
-        return defaults.todoList.count
+        print("defaults.todoList.count =  \(defaults.count)")
+        
+        return defaults.count
     }
     
     func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
@@ -139,10 +143,9 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     }
     
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        let item = defaults.todoList[sourceIndexPath.row]
-        defaults.todoList.remove(at: sourceIndexPath.row)
-        defaults.todoList.insert(item, at:  destinationIndexPath.row)
-        defaults.updateData()
+        let item = defaults.data[sourceIndexPath.row]
+        defaults.remove(index: sourceIndexPath.row)
+        defaults.insert(todo: item, index:  destinationIndexPath.row)
         tableView.reloadData()
     }
     
@@ -152,16 +155,51 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            defaults.todoList.remove(at: indexPath.row)
+            defaults.remove(index: indexPath.row)
             tableView.beginUpdates()
             tableView.deleteRows(at: [indexPath], with: .automatic)
             tableView.endUpdates()
-            defaults.updateData()
+            
         } else if editingStyle == .insert{
-            tableView.insertRows(at: [indexPath], with: .none)
-            tableView.reloadData()    // << May be needed
+            
+            let rowIndex = defaults.count - 1
+            let indexPath = IndexPath(row: rowIndex, section: 0)
+            tableView.beginUpdates()
+            tableView.insertRows(at:  [indexPath], with: .automatic)
+            tableView.endUpdates()
             
         }
+    }
+    
+    func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        let detailsViewController = DetailsViewController()
+        let item = defaults.data[indexPath.row]
+        detailsViewController.itemToEdit = item
+        detailsViewController.delegate = self
+        navigationController?.pushViewController(detailsViewController, animated: true)
+    }
+    
+}
+
+extension MainViewController: DetailViewControllerDelegate {
+    func detailViewControllerDidCancel(_ controller: DetailsViewController) {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func detailViewController(_ controller: DetailsViewController, edited item: Todo) {
+        if let index = defaults.data.firstIndex(of: item){
+            let indexPath = IndexPath(row: index, section: 0)
+            if let cell = tableView.cellForRow(at: indexPath) as? TodoCell{
+                cell.setTodo(item)
+            }
+            navigationController?.popViewController(animated: true)
+        }
+    }
+    
+    func detailViewController(_ controller: DetailsViewController, added item: Todo) {
+        defaults.updateList()
+        tableView.reloadData()
+
     }
     
 }

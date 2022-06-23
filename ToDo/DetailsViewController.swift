@@ -7,9 +7,20 @@
 
 import UIKit
 
+
+protocol DetailViewControllerDelegate: AnyObject {
+    func detailViewControllerDidCancel(_ controller: DetailsViewController)
+    func detailViewController(_ controller: DetailsViewController, added item: Todo)
+    func detailViewController(_ controller: DetailsViewController, edited item: Todo)
+}
+
 class DetailsViewController: UIViewController {
     let defaults = TodoDefaults()
 
+    public weak var itemToEdit: Todo?
+    public weak var delegate: DetailViewControllerDelegate?
+    
+    
     private let titleTextField: UITextField = {
         let text = UITextField()
         text.placeholder = "Название"
@@ -34,18 +45,6 @@ class DetailsViewController: UIViewController {
         return text
     }()
     
-    //    private let saveButton: UIBarButtonItem = {
-    //        let btn = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(DetailsViewController.save))
-    //        btn.tintColor = .systemBlue
-    //        return btn
-    //    }()
-    //
-    //    private let cancelButton: UIView = {
-    //        let btn =  UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(DetailsViewController.cancel))
-    //        btn.tintColor = .red
-    //        return btn
-    //    }()
-    //
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
@@ -53,11 +52,12 @@ class DetailsViewController: UIViewController {
     }
     
     private func setup(){
-                setupSubviews()
+        setupSubviews()
         setupConstraints()
     }
     
     private func setupSubviews() {
+        view.backgroundColor = .white
         self.navigationItem.rightBarButtonItem = .init(title: "Сохранить",
                                                        style: .done,
                                                        target: self,
@@ -68,7 +68,16 @@ class DetailsViewController: UIViewController {
                                                       target: self,
                                                       action: #selector(cancel))
         
-        view.backgroundColor = .white
+        if let itemToEdit = itemToEdit {
+            navigationItem.title = "Редактирование"
+            titleTextField.text = itemToEdit.title
+            descriptionTextField.text = itemToEdit.desc
+        } else {
+            navigationItem.title = "Новая Запись"
+
+        }
+        navigationItem.largeTitleDisplayMode = .never
+        
         view.addSubview(titleTextField)
         view.addSubview(descriptionTextField)
         titleTextField.becomeFirstResponder()
@@ -77,7 +86,7 @@ class DetailsViewController: UIViewController {
     private func setupConstraints() {
         let constraints = [
             titleTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 15),
-            titleTextField.topAnchor.constraint(equalTo: view.topAnchor, constant: 60),
+            titleTextField.topAnchor.constraint(equalTo: navigationItem.titleView?.bottomAnchor ?? view.topAnchor, constant: 95),
             titleTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -25),
             titleTextField.heightAnchor.constraint(equalToConstant: 70),
             
@@ -93,7 +102,7 @@ class DetailsViewController: UIViewController {
     }
     
     @objc func cancel(){
-        self.dismiss(animated: true )
+        delegate?.detailViewControllerDidCancel(self)
     }
     
     @objc func save(){
@@ -105,11 +114,21 @@ class DetailsViewController: UIViewController {
             descriptionTextField.text = "Без описания"
         }
         
-        let todo: Todo = .init(title: titleTextField.text ??  "Без названия" , desc: descriptionTextField.text ?? "Без описания", isDone: false)
-        defaults.todoList.insert(todo, at: defaults.todoList.count)
-        defaults.updateData()
-        self.dismiss(animated: true)
-        print("saved")
+        
+        if let itemToEdit = itemToEdit {
+            itemToEdit.title = titleTextField.text ?? "Без названия"
+            itemToEdit.desc = descriptionTextField.text ?? "Без описания"
+            delegate?.detailViewController(self, edited: itemToEdit)
+        } else {
+            let todo: Todo = .init(
+                titleTextField.text ??  "Без названия" ,
+                descriptionTextField.text ?? "Без описания",
+                false)
+            defaults.save(todo: todo)
+            defaults.updateList()
+            delegate?.detailViewController(self, added: todo)
+            navigationController?.popViewController(animated: true)
+        }
     }
     
 }

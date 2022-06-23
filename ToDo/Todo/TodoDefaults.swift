@@ -14,54 +14,59 @@ var titleDefaults = defaults.array(forKey: Key.title) as? [String] ?? [String]()
 var descriptionDefaults = defaults.array(forKey: Key.desc) as? [String] ?? [String]()
 var isDoneDefaults = defaults.array(forKey: Key.isDone) as? [Bool] ?? [Bool]()
 
+
 struct Key {
     static let title = "title"
     static let desc = "description"
-    static var isDone = "isDone"
+    static let isDone = "isDone"
+    static let todoList = "todoList"
 }
-
-
 
 class TodoDefaults {
     
-    var todoList: [Todo] = []
-
+    static let shared = TodoDefaults()
+    let defaults = UserDefaults.standard
+    
+    private var todoList: [Todo] = []
+    var count: Int {
+        todoList.count
+    }
+    
+    var data: [Todo]{
+        todoList
+    }
+    
     init() {
         updateList()
     }
     
+    func insert(todo: Todo, index: Int){
+        todoList.insert(todo, at: index)
+        updateData()
+        updateList()
+    }
+    
+    func remove(index: Int){
+        todoList.remove(at: index)
+        updateData()
+        updateList()
+    }
     
     func save(todo: Todo){
         todoList.append(todo)
+        updateData()
+        updateList()
     }
     
     func updateList() {
-        for i in 0..<titleDefaults.count {
-            let item = Todo(title: titleDefaults[i],
-                            desc: descriptionDefaults[i],
-                            isDone: isDoneDefaults[i])
-            todoList.append(item)
+        if let data = defaults.object(forKey: Key.todoList) as? Data{
+            todoList = (try? JSONDecoder().decode([Todo].self, from: data)) ?? []
         }
     }
     
-    func updateData() {
-        titleDefaults = []
-        descriptionDefaults = []
-        isDoneDefaults = []
-        for i in todoList {
-            titleDefaults.append(i.title)
-            descriptionDefaults.append(i.desc)
-            isDoneDefaults.append(i.isDone)
+    private func updateData(){
+        if let data = try? JSONEncoder().encode(todoList){
+            defaults.set(data, forKey: Key.todoList)
         }
-        defaults.removeObject(forKey: Key.title)
-        defaults.removeObject(forKey: Key.desc)
-        defaults.removeObject(forKey: Key.isDone)
-        
-        defaults.set(titleDefaults, forKey: Key.title)
-        defaults.set(descriptionDefaults, forKey: Key.desc)
-        defaults.set(isDoneDefaults, forKey: Key.isDone)
-        
     }
-
-    
 }
