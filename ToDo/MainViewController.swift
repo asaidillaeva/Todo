@@ -109,13 +109,16 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: TodoCell.identifier, for: indexPath) as! TodoCell
         cell.setTodo(defaults.data[indexPath.row])
+        cell.delegate = self
+        cell.tappedIndex = indexPath.row
+
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell: TodoCell = tableView.cellForRow(at: indexPath) as? TodoCell{
             let item = defaults.data[indexPath.row]
-            item.isDone.toggle()
+            item.isDone.toggle()  
             defaults.remove(index: indexPath.row)
             defaults.insert(todo: item, index: indexPath.row)
             cell.cellSelected(isSelected: item.isDone)
@@ -193,5 +196,17 @@ extension MainViewController: DetailViewControllerDelegate {
         tableView.insertRows(at:  [indexPath], with: .left)
         tableView.endUpdates()
         
+    }
+}
+
+extension MainViewController: TodoCellDelegate{
+    func didTapCheckMark(index: Int) {
+        if let cell: TodoCell = tableView.cellForRow(at: IndexPath(row: index, section: 0)) as? TodoCell{
+            let item = defaults.data[index]
+            item.isDone.toggle()
+            defaults.remove(index: index)
+            defaults.insert(todo: item, index: index)
+            cell.cellSelected(isSelected: item.isDone)
+        }
     }
 }

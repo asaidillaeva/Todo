@@ -8,8 +8,15 @@
 import Foundation
 import UIKit
 
+protocol TodoCellDelegate: AnyObject{
+    func didTapCheckMark(index: Int)
+}
+
 class TodoCell: UITableViewCell{
-    
+     
+    weak var delegate: TodoCellDelegate?
+    var tappedIndex: Int?
+
     let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18)
@@ -29,14 +36,19 @@ class TodoCell: UITableViewCell{
         let view = UIButton()
         view.setBackgroundImage(UIImage(systemName: "circle"), for: .normal)
         view.tintColor = .orange
+        view.addTarget(self, action: #selector(isDone), for: .touchUpInside)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-    
+   
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setup()
         accessoryType = .detailDisclosureButton
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     func cellSelected(isSelected: Bool) {
@@ -44,11 +56,7 @@ class TodoCell: UITableViewCell{
             systemName: isSelected ? "checkmark.circle.fill" : "circle" ),
             for: .normal)
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+  
     private func setup(){
         setupSubviews()
         setupConstraints()
@@ -79,6 +87,9 @@ class TodoCell: UITableViewCell{
         NSLayoutConstraint.activate(constraints)
     }
     
+    @objc func isDone() {
+        delegate?.didTapCheckMark(index: tappedIndex ?? 0)
+    }
     
     func setTodo(_ todo: Todo){
         titleLabel.text = todo.title
