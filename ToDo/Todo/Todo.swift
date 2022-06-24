@@ -23,8 +23,6 @@ class Todo: Codable {
         self.desc = desc
         self.isDone = isDone
     }
-    
-    
 }
 extension Todo: Equatable{
     static func == (lhs: Todo, rhs: Todo) -> Bool {

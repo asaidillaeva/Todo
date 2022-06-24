@@ -46,16 +46,9 @@ class MainViewController: UIViewController {
         setup()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        tableView.reloadData()
-    }
-    
     @objc
     func add(){
-        //open editViewController
         let detailsViewController = DetailsViewController()
-        detailsViewController.itemToEdit = Todo()
         detailsViewController.delegate = self
         navigationController?.pushViewController(detailsViewController, animated: true)
     }
@@ -121,7 +114,7 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell: TodoCell = tableView.cellForRow(at: indexPath) as? TodoCell{
-            var item = defaults.data[indexPath.row]
+            let item = defaults.data[indexPath.row]
             item.isDone.toggle()
             defaults.remove(index: indexPath.row)
             defaults.insert(todo: item, index: indexPath.row)
@@ -129,11 +122,8 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
         }
     }
     
-    
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         print("defaults.todoList.count =  \(defaults.count)")
-        
         return defaults.count
     }
     
@@ -164,7 +154,7 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
             let rowIndex = defaults.count - 1
             let indexPath = IndexPath(row: rowIndex, section: 0)
             tableView.beginUpdates()
-            tableView.insertRows(at:  [indexPath], with: .automatic)
+            tableView.insertRows(at:  [indexPath], with: .left)
             tableView.endUpdates()
             
         }
@@ -172,9 +162,8 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     
     func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
         if tableView.isEditing {
-            return 
+            return
         }
-        
         let detailsViewController = DetailsViewController()
         let item = defaults.data[indexPath.row]
         detailsViewController.itemToEdit = item
@@ -185,9 +174,6 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
 }
 
 extension MainViewController: DetailViewControllerDelegate {
-    func detailViewControllerDidCancel(_ controller: DetailsViewController) {
-        navigationController?.popViewController(animated: true)
-    }
     
     func detailViewController(_ controller: DetailsViewController, edited item: Todo) {
         if let index = defaults.data.firstIndex(of: item){
@@ -201,8 +187,11 @@ extension MainViewController: DetailViewControllerDelegate {
     
     func detailViewController(_ controller: DetailsViewController, added item: Todo) {
         defaults.updateList()
-        tableView.reloadData()
-
+        let rowIndex = defaults.count - 1
+        let indexPath = IndexPath(row: rowIndex, section: 0)
+        tableView.beginUpdates()
+        tableView.insertRows(at:  [indexPath], with: .left)
+        tableView.endUpdates()
+        
     }
-    
 }

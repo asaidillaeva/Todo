@@ -9,7 +9,6 @@ import UIKit
 
 
 protocol DetailViewControllerDelegate: AnyObject {
-    func detailViewControllerDidCancel(_ controller: DetailsViewController)
     func detailViewController(_ controller: DetailsViewController, added item: Todo)
     func detailViewController(_ controller: DetailsViewController, edited item: Todo)
 }
@@ -102,7 +101,7 @@ class DetailsViewController: UIViewController {
     }
     
     @objc func cancel(){
-        delegate?.detailViewControllerDidCancel(self)
+        navigationController?.popViewController(animated: true)
     }
     
     @objc func save(){
@@ -116,13 +115,13 @@ class DetailsViewController: UIViewController {
         
         
         if let itemToEdit = itemToEdit {
-            itemToEdit.title = titleTextField.text ?? "Без названия"
-            itemToEdit.desc = descriptionTextField.text ?? "Без описания"
+            itemToEdit.title = titleTextField.text!
+            itemToEdit.desc = descriptionTextField.text!
             delegate?.detailViewController(self, edited: itemToEdit)
         } else {
             let todo: Todo = .init(
-                titleTextField.text ??  "Без названия" ,
-                descriptionTextField.text ?? "Без описания",
+                titleTextField.text! ,
+                descriptionTextField.text!,
                 false)
             defaults.save(todo: todo)
             defaults.updateList()

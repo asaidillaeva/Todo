@@ -14,10 +14,9 @@ enum Key: String {
 
 class TodoDefaults {
     
-    static let shared = TodoDefaults()
     let defaults = UserDefaults.standard
-    
     private var todoList: [Todo] = []
+    
     var count: Int {
         todoList.count
     }
@@ -33,19 +32,16 @@ class TodoDefaults {
     func insert(todo: Todo, index: Int){
         todoList.insert(todo, at: index)
         updateData()
-        updateList()
     }
     
     func remove(index: Int){
         todoList.remove(at: index)
         updateData()
-        updateList()
     }
     
     func save(todo: Todo){
         todoList.append(todo)
         updateData()
-        updateList()
     }
     
     func updateList() {
