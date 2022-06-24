@@ -58,7 +58,6 @@ class MainViewController: UIViewController {
         detailsViewController.itemToEdit = Todo()
         detailsViewController.delegate = self
         navigationController?.pushViewController(detailsViewController, animated: true)
-
     }
     
     @objc
@@ -67,7 +66,7 @@ class MainViewController: UIViewController {
         
         if tableView.isEditing {
             addButton.isHidden = true
-            editButton.setBackgroundImage(UIImage(systemName: "pencil.circle"), for: .normal)
+            editButton.setBackgroundImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
             editButton.tintColor = .systemBlue
         } else {
             addButton.isHidden = false
@@ -172,6 +171,10 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     }
     
     func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        if tableView.isEditing {
+            return 
+        }
+        
         let detailsViewController = DetailsViewController()
         let item = defaults.data[indexPath.row]
         detailsViewController.itemToEdit = item
